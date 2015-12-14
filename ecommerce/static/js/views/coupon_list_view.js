@@ -26,7 +26,6 @@ define([
             template: _.template(CouponListViewTemplate),
 
             initialize: function () {
-                _.bindAll(this, 'downloadVoucherReport');
                 this.listenTo(this.collection, 'update', this.refreshTableData);
             },
 
@@ -66,7 +65,11 @@ define([
                         columns: [
                             {
                                 title: gettext('Name'),
-                                data: 'title'
+                                data: 'title',
+                                fnCreatedCell: function (nTd, sData, oData) {
+                                    $(nTd).html(_s.sprintf('<a href="/coupons/%s/" class="coupon-title">%s</a>',
+                                        oData.id, oData.title));
+                                }
                             },
                             {
                                 title: gettext('Voucher Report'),

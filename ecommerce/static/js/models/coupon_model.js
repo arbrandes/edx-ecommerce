@@ -21,7 +21,7 @@ define([
         _.extend(Backbone.Model.prototype, Backbone.Validation.mixin);
 
         return Backbone.Model.extend({
-            urlRoot: '/api/v2/coupons/',
+            urlRoot: '/api/v2/products/',
 
             defaults: {
                 quantity: 1,
@@ -120,7 +120,8 @@ define([
                     type: 'POST',
                     // The API requires a CSRF token for all POST requests using session authentication.
                     headers: {'X-CSRFToken': $.cookie('ecommerce_csrftoken')},
-                    contentType: 'application/json'
+                    contentType: 'application/json',
+                    url: '/api/v2/coupons/'
                 });
 
                 data = {
