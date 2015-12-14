@@ -20,13 +20,12 @@ define([
             className: 'coupon-list-view',
 
             events: {
-                'click .voucher-report-button': 'downloadVoucherReport'
+                'click .voucher-report-button': 'downloadCouponReport'
             },
 
             template: _.template(CouponListViewTemplate),
 
             initialize: function () {
-                _.bindAll(this, 'downloadVoucherReport');
                 this.listenTo(this.collection, 'update', this.refreshTableData);
             },
 
@@ -66,7 +65,11 @@ define([
                         columns: [
                             {
                                 title: gettext('Name'),
-                                data: 'title'
+                                data: 'title',
+                                fnCreatedCell: function (nTd, sData, oData) {
+                                    $(nTd).html(_s.sprintf('<a href="/coupons/%s/" class="coupon-title">%s</a>',
+                                        oData.id, oData.title));
+                                }
                             },
                             {
                                 title: gettext('Voucher Report'),
@@ -74,7 +77,7 @@ define([
                                 fnCreatedCell: function (nTd, sData, oData) {
                                     $(nTd).html(_s.sprintf('<a href="" ' +
                                         'class="btn btn-secondary btn-small voucher-report-button" ' +
-                                        'data-coupon-id="%s"> Download Voucher Report</a>', oData.id));
+                                        'data-coupon-id="%s"> Download Coupon Report</a>', oData.id));
                                 },
                                 orderable: false
                              }
@@ -113,9 +116,9 @@ define([
             /**
              * Download voucher report for a Coupon product
              */
-            downloadVoucherReport: function (event) {
+            downloadCouponReport: function (event) {
                 var coupon_id = $(event.currentTarget).data('coupon-id'),
-                    url = '/api/v2/vouchers/download_voucher_report/' + coupon_id;
+                    url = '/api/v2/vouchers/download_coupon_report/' + coupon_id;
 
                 event.preventDefault();
                 window.open(url, '_blank');
