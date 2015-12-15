@@ -22,10 +22,7 @@
             </div>
             <hr>
             <div class="pull-right">
-                <form action="/coupons/redeem/" method="get">
-                    <input type="hidden" name="code" value="{{ code }}">
-                    <input class="btn btn-primary" type="submit" value="{% trans 'Redeem' %}">
-                </form>
+                <a href="/coupons/redeem/?code={{ code }}" class="btn btn-primary"> Redeem</a>
             </div>
         </div>
     </div>
