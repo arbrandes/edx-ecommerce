@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.decorators import method_decorator
 from oscar.core.loading import get_model
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
@@ -37,9 +37,6 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, NonDestroyableModelViewSet):
     Creates a new coupon product, adds it to a basket and creates a
     new order from that basket.
     """
-
-    # queryset = Order.objects.filter(lines__product__product_class__name='Coupon')
-    # serializer_class = serializers.CouponOrderSerializer
     queryset = Product.objects.filter(product_class__name='Coupon')
     serializer_class = serializers.CouponSerializer
     permission_classes = (IsAuthenticated, IsAdminUser)

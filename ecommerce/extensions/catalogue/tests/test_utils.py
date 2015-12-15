@@ -61,7 +61,7 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
 
         _hash = ' '.join((
             unicode(coupon.id),
-            unicode(self.catalog.name),
+            unicode(self.catalog.id),
             str(self.partner.id)
         ))
         _hash = md5(_hash.lower()).hexdigest()[-7:]

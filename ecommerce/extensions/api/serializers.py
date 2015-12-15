@@ -32,6 +32,22 @@ COURSE_DETAIL_VIEW = 'api:v2:course-detail'
 PRODUCT_DETAIL_VIEW = 'api:v2:product-detail'
 
 
+class ProductInfoSerializerMixin(serializers.ModelSerializer):
+    """Mixin for fetching the price of a product."""
+    price = serializers.SerializerMethodField()
+
+    def get_info(self, request, product):
+        """Return the appropriate ``PurchaseInfo`` instance."""
+        return Selector().strategy(request=request).fetch_for_product(product)
+
+    def get_price(self, product):
+        request = self.context.get('request')
+        info = self.get_info(request, product)
+        if info.availability.is_available_to_buy:
+            return serializers.DecimalField(max_digits=10, decimal_places=2).to_representation(info.price.excl_tax)
+        return None
+
+
 class BillingAddressSerializer(serializers.ModelSerializer):
     """Serializes a Billing Address. """
     city = serializers.CharField(max_length=255, source='line4')
@@ -80,30 +96,19 @@ class PartialStockRecordSerializerForUpdate(StockRecordSerializer):
         fields = ('price_currency', 'price_excl_tax',)
 
 
-class ProductSerializer(serializers.HyperlinkedModelSerializer):
+class ProductSerializer(ProductInfoSerializerMixin, serializers.HyperlinkedModelSerializer):
     """ Serializer for Products. """
     attribute_values = ProductAttributeValueSerializer(many=True, read_only=True)
     product_class = serializers.SerializerMethodField()
-    price = serializers.SerializerMethodField()
     is_available_to_buy = serializers.SerializerMethodField()
     stockrecords = StockRecordSerializer(many=True, read_only=True)
 
     def get_product_class(self, product):
         return product.get_product_class().name
 
-    def get_price(self, product):
-        info = self._get_info(product)
-        if info.availability.is_available_to_buy:
-            return serializers.DecimalField(max_digits=10, decimal_places=2).to_representation(info.price.excl_tax)
-        return None
-
-    def _get_info(self, product):
-        return Selector().strategy(
-            request=self.context.get('request')
-        ).fetch_for_product(product)
-
     def get_is_available_to_buy(self, product):
-        info = self._get_info(product)
+        request = self.context.get('request')
+        info = self.get_info(request, product)
         return info.availability.is_available_to_buy
 
     class Meta(object):
@@ -358,60 +363,9 @@ class VoucherSerializer(serializers.ModelSerializer):
         )
 
 
-class CouponOrderSerializer(serializers.ModelSerializer):
-    coupon_type = serializers.SerializerMethodField()
-    products = serializers.SerializerMethodField()
-    catalog = serializers.SerializerMethodField()
-    client = serializers.SerializerMethodField()
-    last_edited = serializers.SerializerMethodField()
-
-    def get_coupon_type(self, obj):
-        product = obj.lines.first().product
-        voucher = product.attr.coupon_vouchers.vouchers.first()
-        if (
-            voucher.offers.first().benefit.type == 'Percentage' and
-            voucher.offers.first().benefit.value == 100
-        ):
-            return 'Enrollment code'
-        return 'Discount code'
-
-    def get_products(self, obj):
-        request = self.context.get('request')
-        product_list = []
-        for line in obj.lines.all():
-            product_list.append(line.product)
-        serializer = ProductSerializer(product_list, many=True, context={'request': request})
-        return serializer.data
-
-    def get_catalog(self, obj):
-        request = self.context.get('request')
-        product = obj.lines.first().product
-        offer = product.attr.coupon_vouchers.vouchers.first().offers.first()
-        catalog = offer.condition.range.catalog
-        serializer = CatalogSerializer(catalog, context={'request': request})
-        return serializer.data
-
-    def get_client(self, obj):
-        return obj.user.username
-
-    def get_last_edited(self, obj):
-        user = obj.history.latest().history_user.email
-        time = obj.history.latest().history_date.strftime(ISO_8601_FORMAT)
-        return (user, time)
-
-    class Meta(object):
-        model = Order
-        fields = ('id', 'coupon_type', 'products', 'catalog', 'client', 'last_edited')
-
-
-class CouponSerializer(serializers.ModelSerializer):
-    price = serializers.SerializerMethodField()
+class CouponSerializer(ProductInfoSerializerMixin, serializers.ModelSerializer):
     vouchers = serializers.SerializerMethodField()
     catalog = serializers.SerializerMethodField()
-
-    def get_price(self, obj):
-        stock_record = StockRecord.objects.get(product=obj)
-        return stock_record.price_excl_tax
 
     def get_vouchers(self, obj):
         vouchers = obj.attr.coupon_vouchers.vouchers.all()
