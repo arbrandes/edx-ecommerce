@@ -44,6 +44,14 @@ define([
             it('should throw an error if saving the data fails', function () {
                 var errorHTML = '<strong>Error!</strong> An error occurred while saving the data.',
                     errorObj;
+
+                function testErrorResponse() {
+                    view.submit($.Event('click'));
+                    expect(model.save).toHaveBeenCalled();
+                    expect(view.$el.find('.alert').length).toBe(1);
+                    expect(view.$el.find('.alert').html()).toBe(errorHTML);
+                }
+
                 spyOn(model, 'isValid').and.returnValue(true);
                 spyOn(model, 'save').and.callFake(function (options) {
                     options.error(model, errorObj);
@@ -51,17 +59,10 @@ define([
                 });
 
                 errorObj = { responseText: 'Fake error!' };
-                view.submit($.Event('click'));
-                expect(model.save).toHaveBeenCalled();
-                expect(view.$el.find('.alert').length).toBe(1);
-                expect(view.$el.find('.alert').html()).toBe(errorHTML);
+                testErrorResponse();
 
-                // return responseJSON
                 errorObj = { responseJSON: { error: 'An error occurred while saving the data.' }};
-                view.submit($.Event('click'));
-                expect(model.save).toHaveBeenCalled();
-                expect(view.$el.find('.alert').length).toBe(1);
-                expect(view.$el.find('.alert').html()).toBe(errorHTML);
+                testErrorResponse();
             });
 
         });

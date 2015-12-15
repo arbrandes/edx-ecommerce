@@ -14,15 +14,7 @@ define([
 
         return PaginatedCollection.extend({
             model: CouponModel,
-            url: '/api/v2/products/',
-
-            /*
-             * Return an array of products where product_class is Coupon.
-             */
-            parse: function (response) {
-                var results = this._super(response);
-                return _.where(results, { product_class: 'Coupon' });
-            }
+            url: '/api/v2/coupons/'
         });
     }
 );

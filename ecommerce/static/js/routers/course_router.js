@@ -21,7 +21,8 @@ define([
 
             routes: {
                 '(/)': 'index',
-                'new(/)': 'new'
+                'new(/)': 'new',
+                '*path': 'notFound'
             },
 
             /**

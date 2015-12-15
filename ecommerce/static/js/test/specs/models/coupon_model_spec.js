@@ -44,7 +44,6 @@ define([
                 stock_record_ids: [1],
                 code: 'TESTCODE',
                 voucher_type: 'Single use',
-                quantity: 0,
                 benefit_type: 'Percentage',
                 benefit_value: 25,
                 course_id: 'a/b/c',
@@ -59,7 +58,6 @@ define([
                 end_date: '2016-01-01T00:00:00Z',
                 stock_record_ids: [1],
                 voucher_type: 'Single use',
-                quantity: 0,
                 price: 100,
                 course_id: 'a/b/c',
                 seat_type: 'verified',
@@ -109,8 +107,8 @@ define([
                     var model = new Coupon(enrollment);
                     model.save();
                     expect($.ajax).toHaveBeenCalled();
-                    var args = $.ajax.calls.argsFor(1)[0];
-                    var ajaxData = JSON.parse(args.data);
+                    var args = $.ajax.calls.argsFor(0);
+                    var ajaxData = JSON.parse(args[0].data);
                     expect(ajaxData.benefit_type).toEqual('Percentage');
                     expect(ajaxData.benefit_value).toEqual(100);
                     expect(ajaxData.quantity).toEqual(1);
@@ -121,8 +119,8 @@ define([
                     var model = new Coupon(discount);
                     model.save();
                     expect($.ajax).toHaveBeenCalled();
-                    var args = $.ajax.calls.argsFor(1)[0];
-                    var ajaxData = JSON.parse(args.data);
+                    var args = $.ajax.calls.argsFor(0);
+                    var ajaxData = JSON.parse(args[0].data);
                     expect(ajaxData.price).toEqual(0);
                     expect(ajaxData.quantity).toEqual(1);
                 });

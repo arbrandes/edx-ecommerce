@@ -41,18 +41,7 @@ define([
                         ],
                         is_available_to_buy: true,
                         stockrecords: []
-                    },
-                    {
-                        id: 3,
-                        url: 'http://localhost:8002/api/v2/products/3/',
-                        structure: 'child',
-                        product_class: 'Seat',
-                        title: 'Seat in demo course with verified certificate (and ID verification)',
-                        price: '100.00',
-                        expires: null,
-                        is_available_to_buy: true,
-                        stockrecords: [ ]
-                    },
+                    }
                 ]
             };
 
@@ -62,18 +51,9 @@ define([
 
         describe('Coupon collection', function () {
             describe('parse', function () {
-                it('should filter results by product_class = Coupon', function () {
-                    spyOn(collection, 'fetch').and.returnValue(null);
-                    collection.set(collection.parse(response));
-
-                    expect(collection.length).toEqual(1);
-                    expect(collection.get(3)).toBeUndefined();
-                    expect(collection.get(4)).toBeDefined();
-                });
-
                 it('should fetch the next page of results', function () {
                     spyOn(collection, 'fetch').and.returnValue(null);
-                    response.next = '/api/v2/products/?page=2';
+                    response.next = '/api/v2/coupons/?page=2';
 
                     collection.parse(response);
                     expect(collection.url).toEqual(response.next);

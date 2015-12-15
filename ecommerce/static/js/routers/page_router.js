@@ -4,6 +4,9 @@ define([
     function (Backbone) {
         'use strict';
 
+        /***
+         * Base Router class.
+         */
         return Backbone.Router.extend({
 
             // Keeps track of the page/view currently on display
@@ -63,5 +66,6 @@ define([
             }
 
         });
+
     }
 );

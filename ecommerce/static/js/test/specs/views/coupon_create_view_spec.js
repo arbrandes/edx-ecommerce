@@ -14,6 +14,10 @@ define([
             var view,
                 model;
 
+            function visible(selector) {
+                return !view.$el.find(selector).closest('.form-group').hasClass('hidden');
+            }
+
             beforeEach(function () {
                 model = new Coupon();
                 view = new CouponCreateEditView({ model: model, editing: false }).render();
@@ -26,40 +30,58 @@ define([
                 expect(view.$el.find('.alert').html()).toBe(errorHTML);
             });
 
-            it('should toggle fields', function () {
-                function visible(selector) {
-                    return !view.$el.find(selector).closest('.form-group').hasClass('hidden');
-                }
+            describe('enrollment code', function () {
+                beforeEach(function () {
+                    view.$el.find('[name=code_type]').val('enrollment').trigger('change');
+                });
 
-                // discount
-                view.$el.find('[name=code_type]').val('discount').trigger('change');
-                expect(visible('[name=price]')).toBe(false);
-                expect(visible('[name=benefit_value]')).toBe(true);
-                expect(view.$el.find('.benefit-addon').html()).toBe('%');
+                it('should show the price field', function () {
+                    expect(visible('[name=price]')).toBe(true);
+                });
 
-                view.$el.find('[name=benefit_type]').val('Fixed').trigger('change');
-                expect(view.$el.find('.benefit-addon').html()).toBe('$');
+                it('should hide discount and code fields', function () {
+                    expect(visible('[name=benefit_value]')).toBe(false);
+                    expect(visible('[name=code]')).toBe(false);
+                });
 
-                view.$el.find('[name=voucher_type]').val('Single use').trigger('change');
-                expect(visible('[name=code]')).toBe(false);
-                view.$el.find('[name=voucher_type]').val('Multi-use').trigger('change');
-                expect(visible('[name=code]')).toBe(true);
-                view.$el.find('[name=voucher_type]').val('Once per customer').trigger('change');
-                expect(visible('[name=code]')).toBe(true);
+                it('should show the quantity field only for single-use vouchers', function () {
+                    view.$el.find('[name=voucher_type]').val('Single use').trigger('change');
+                    expect(visible('[name=quantity]')).toBe(true);
+                    view.$el.find('[name=voucher_type]').val('Multi-use').trigger('change');
+                    expect(visible('[name=quantity]')).toBe(false);
+                    view.$el.find('[name=voucher_type]').val('Once per customer').trigger('change');
+                    expect(visible('[name=quantity]')).toBe(false);
+                });
+            });
 
-                // enrollment
-                view.$el.find('[name=code_type]').val('enrollment').trigger('change');
-                expect(visible('[name=price]')).toBe(true);
-                expect(visible('[name=benefit_value]')).toBe(false);
-                expect(visible('[name=code]')).toBe(false);
+            describe('discount', function () {
+                beforeEach(function () {
+                    view.$el.find('[name=code_type]').val('discount').trigger('change');
+                });
 
-                // quantity
-                view.$el.find('[name=voucher_type]').val('Single use').trigger('change');
-                expect(visible('[name=quantity]')).toBe(true);
-                view.$el.find('[name=voucher_type]').val('Multi-use').trigger('change');
-                expect(visible('[name=quantity]')).toBe(false);
-                view.$el.find('[name=voucher_type]').val('Once per customer').trigger('change');
-                expect(visible('[name=quantity]')).toBe(false);
+                it('should show the discount field', function () {
+                    expect(visible('[name=benefit_value]')).toBe(true);
+                });
+
+                it('should hide the price field', function () {
+                    expect(visible('[name=price]')).toBe(false);
+                });
+
+                it('should indicate the benefit type', function () {
+                    view.$el.find('[name=code_type]').val('enrollment').trigger('change');
+                    expect(view.$el.find('.benefit-addon').html()).toBe('%');
+                    view.$el.find('[name=benefit_type]').val('Fixed').trigger('change');
+                    expect(view.$el.find('.benefit-addon').html()).toBe('$');
+                });
+
+                it('should show the code field only for multi-use vouchers', function () {
+                    view.$el.find('[name=voucher_type]').val('Single use').trigger('change');
+                    expect(visible('[name=code]')).toBe(false);
+                    view.$el.find('[name=voucher_type]').val('Multi-use').trigger('change');
+                    expect(visible('[name=code]')).toBe(true);
+                    view.$el.find('[name=voucher_type]').val('Once per customer').trigger('change');
+                    expect(visible('[name=code]')).toBe(true);
+                });
             });
 
         });

@@ -9,6 +9,7 @@ define([
         'underscore',
         'underscore.string',
         'text!templates/coupon_form.html',
+        'models/course_model',
         'views/form_view'
     ],
     function ($,
@@ -19,6 +20,7 @@ define([
               _,
               _s,
               CouponFormTemplate,
+              Course,
               FormView) {
         'use strict';
 
@@ -28,6 +30,8 @@ define([
             className: 'coupon-form-view',
 
             template: _.template(CouponFormTemplate),
+
+            seatTypes: [],
 
             codeTypes: [
                 {
@@ -60,10 +64,10 @@ define([
                     observe: 'title'
                 },
                 'select[name=seat_type]': {
-                    observe: 'seat_type',
+                    observe: ['seat_type', 'stock_record_ids'],
                     selectOptions: {
-                        collection: function() {
-                            return this.model.get('seatTypes') || [];
+                        collection: function () {
+                            return this.seatTypes;
                         }
                     }
                 },
@@ -124,6 +128,10 @@ define([
                 }
             },
 
+            events: {
+                'input [name=course_id]': 'fillFromCourse'
+            },
+
             initialize: function (options) {
                 this.alertViews = [];
                 this.editing = options.editing || false;
@@ -171,6 +179,31 @@ define([
                     formGroup('[name=quantity]').addClass('hidden');
                 }
             },
+
+            /**
+             * Fill seat type options from course ID.
+             */
+            fillFromCourse: _.debounce(function () {
+                var courseId = this.$el.find('[name=course_id]').val(),
+                    course = Course.findOrCreate({id: courseId }),
+                    parseId = _.compose(parseInt, _.property('id')),
+                    self = this;
+
+                course.listenTo(course, 'change', function (model) {
+                    self.seatTypes = _.map(model.seats(), function(seat) {
+                        return {
+                            label: seat.getSeatTypeDisplayName(),
+                            // value: seat.get('certificate_type')
+                            value: _.map(seat.get('stockrecords'), parseId)
+                        };
+                    });
+                    // update selectOptions and update field
+                    self.stickit();
+                    self.$el.find('[name=seat_type]').trigger('change');
+                });
+
+                course.fetch({data: {include_products: true}});
+            }, 100),
 
             /**
              * Navigate to coupon list on save (overrides default behaviour).

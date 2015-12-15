@@ -12,9 +12,10 @@ from edx_rest_api_client.client import EdxRestApiClient
 from requests import Timeout
 from slumber.exceptions import SlumberBaseException
 
+from ecommerce.core.views import StaffOnlyMixin
 from ecommerce.extensions.partner.shortcuts import get_partner_for_site
 from ecommerce.settings import get_lms_url
-from ecommerce.core.views import StaffOnlyMixin
+
 
 logger = logging.getLogger(__name__)
 
