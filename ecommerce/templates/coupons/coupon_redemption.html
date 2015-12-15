@@ -1,0 +1,40 @@
+{% extends 'edx/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{% trans "Redeem" %}{% endblock %}
+
+{% block content %}
+    <div id="redemption">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2">
+                    <img class="img-responsive" src="{{course.image_url}}" alt="" />
+                </div>
+                <div class="col-md-8">
+                    <h3>{{ course.name }} - {{ course.org }}</h3>
+                </div>
+                <div class="col-md-2 text-right">
+                    <p class="text-free">
+                        <b>{% trans "FREE" %}</b>
+                    </p>
+                </div>
+            </div>
+            <hr>
+            <div class="pull-right">
+                <form action="/coupons/redeem/" method="get">
+                    <input type="hidden" name="code" value="{{ code }}">
+                    <input class="btn btn-primary" type="submit" value="{% trans 'Redeem' %}">
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block footer %}
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+            </div>
+        </div>
+    </footer>
+{% endblock footer %}
