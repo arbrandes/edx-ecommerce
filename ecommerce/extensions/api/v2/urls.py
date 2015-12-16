@@ -22,6 +22,10 @@ BASKET_URLS = [
     ),
 ]
 
+COUPON_URLS = [
+    url(r'^$', coupons_views.CouponOrderCreateView.as_view(), name='create'),
+]
+
 PAYMENT_URLS = [
     url(r'^processors/$', payment_views.PaymentProcessorListView.as_view(),
         name='list_processors'),
@@ -43,6 +47,7 @@ ATOMIC_PUBLICATION_URLS = [
 
 urlpatterns = [
     url(r'^baskets/', include(BASKET_URLS, namespace='baskets')),
+    url(r'^coupons/', include(COUPON_URLS, namespace='coupons')),
     url(r'^payment/', include(PAYMENT_URLS, namespace='payment')),
     url(r'^refunds/', include(REFUND_URLS, namespace='refunds')),
     url(r'^publication/', include(ATOMIC_PUBLICATION_URLS, namespace='publication')),
@@ -67,7 +72,5 @@ router.register(r'catalogs', catalog_views.CatalogViewSet) \
 
 
 router.register(r'orders', order_views.OrderViewSet)
-
-router.register(r'coupons', coupons_views.CouponOrderCreateView, base_name="coupons")
 
 urlpatterns += router.urls

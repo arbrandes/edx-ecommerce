@@ -32,22 +32,6 @@ COURSE_DETAIL_VIEW = 'api:v2:course-detail'
 PRODUCT_DETAIL_VIEW = 'api:v2:product-detail'
 
 
-class ProductInfoSerializerMixin(serializers.ModelSerializer):
-    """Mixin for fetching the price of a product."""
-    price = serializers.SerializerMethodField()
-
-    def get_info(self, request, product):
-        """Return the appropriate ``PurchaseInfo`` instance."""
-        return Selector().strategy(request=request).fetch_for_product(product)
-
-    def get_price(self, product):
-        request = self.context.get('request')
-        info = self.get_info(request, product)
-        if info.availability.is_available_to_buy:
-            return serializers.DecimalField(max_digits=10, decimal_places=2).to_representation(info.price.excl_tax)
-        return None
-
-
 class BillingAddressSerializer(serializers.ModelSerializer):
     """Serializes a Billing Address. """
     city = serializers.CharField(max_length=255, source='line4')
@@ -96,19 +80,30 @@ class PartialStockRecordSerializerForUpdate(StockRecordSerializer):
         fields = ('price_currency', 'price_excl_tax',)
 
 
-class ProductSerializer(ProductInfoSerializerMixin, serializers.HyperlinkedModelSerializer):
+class ProductSerializer(serializers.HyperlinkedModelSerializer):
     """ Serializer for Products. """
     attribute_values = ProductAttributeValueSerializer(many=True, read_only=True)
     product_class = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
     is_available_to_buy = serializers.SerializerMethodField()
     stockrecords = StockRecordSerializer(many=True, read_only=True)
 
     def get_product_class(self, product):
         return product.get_product_class().name
 
+    def get_price(self, product):
+        info = self._get_info(product)
+        if info.availability.is_available_to_buy:
+            return serializers.DecimalField(max_digits=10, decimal_places=2).to_representation(info.price.excl_tax)
+        return None
+
+    def _get_info(self, product):
+        return Selector().strategy(
+            request=self.context.get('request')
+        ).fetch_for_product(product)
+
     def get_is_available_to_buy(self, product):
-        request = self.context.get('request')
-        info = self.get_info(request, product)
+        info = self._get_info(product)
         return info.availability.is_available_to_buy
 
     class Meta(object):
@@ -361,24 +356,3 @@ class VoucherSerializer(serializers.ModelSerializer):
             'num_basket_additions', 'num_orders', 'total_discount',
             'date_created', 'offers', 'is_available_to_user', 'benefit'
         )
-
-
-class CouponSerializer(ProductInfoSerializerMixin, serializers.ModelSerializer):
-    vouchers = serializers.SerializerMethodField()
-    catalog = serializers.SerializerMethodField()
-
-    def get_vouchers(self, obj):
-        vouchers = obj.attr.coupon_vouchers.vouchers.all()
-        serializer = VoucherSerializer(vouchers, many=True)
-        return serializer.data
-
-    def get_catalog(self, obj):
-        request = self.context.get('request')
-        offer = obj.attr.coupon_vouchers.vouchers.first().offers.first()
-        catalog = offer.condition.range.catalog
-        serializer = CatalogSerializer(catalog, context={'request': request})
-        return serializer.data
-
-    class Meta(object):
-        model = Product
-        fields = ('id', 'title', 'price', 'catalog', 'vouchers')
