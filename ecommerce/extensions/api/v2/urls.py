@@ -50,6 +50,7 @@ urlpatterns = [
     url(r'^baskets/', include(BASKET_URLS, namespace='baskets')),
     url(r'^payment/', include(PAYMENT_URLS, namespace='payment')),
     url(r'^refunds/', include(REFUND_URLS, namespace='refunds')),
+    url(r'^vouchers/', include(VOUCHER_URLS, namespace='vouchers')),
     url(r'^publication/', include(ATOMIC_PUBLICATION_URLS, namespace='publication')),
 ]
 
