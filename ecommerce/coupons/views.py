@@ -1,9 +1,9 @@
 import logging
 
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView
 from ecommerce.core.views import StaffOnlyMixin
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 
@@ -15,7 +15,7 @@ from oscar.core.loading import get_class, get_model
 from ecommerce.extensions.api import data as data_api
 from ecommerce.extensions.api.constants import APIConstants as AC
 from ecommerce.extensions.checkout.mixins import EdxOrderPlacementMixin
-from ecommerce.extensions.partner.shortcuts import get_partner_for_site
+from ecommerce.extensions.fulfillment.status import ORDER
 from ecommerce.settings import get_lms_url
 
 
@@ -59,7 +59,7 @@ class CouponAppView(StaffOnlyMixin, TemplateView):
     template_name = 'coupons/coupon_app.html'
 
 
-class CouponOfferView(View, VoucherMixin):
+class CouponOfferView(VoucherMixin, TemplateView):
     template_name = 'coupons/coupon_redemption.html'
 
     def get(self, request):
@@ -72,12 +72,7 @@ class CouponOfferView(View, VoucherMixin):
         Returns:
 
         """
-        partner = get_partner_for_site(request)
-        if not partner:
-            return HttpResponseServerError('No Partner is associated with this site.')
-
         code = request.GET.get('code', None)
-        api = EdxRestApiClient(get_lms_url('api/courses/v1/'))
 
         if code is not None:
             voucher, product = self.get_voucher(code=code)
@@ -86,10 +81,11 @@ class CouponOfferView(View, VoucherMixin):
         else:
             return HttpResponseBadRequest('Code not valid')
 
+        api = EdxRestApiClient(get_lms_url('api/courses/v1/'))
         try:
             course = api.courses(product.course_id).get()
         except SlumberHttpBaseException as e:
-            # TODO: handle error
+            logger.error('Could not get course information')
             return HttpResponseBadRequest('Error [%s]', e)
 
         course['image_url'] = get_lms_url(course['media']['course_image']['uri'])
@@ -100,7 +96,7 @@ class CouponOfferView(View, VoucherMixin):
         return render(request, self.template_name, data)
 
 
-class CouponRedeemView(View, VoucherMixin, EdxOrderPlacementMixin):
+class CouponRedeemView(VoucherMixin, EdxOrderPlacementMixin, TemplateView):
 
     @method_decorator(login_required)
     def get(self, request):
@@ -119,12 +115,12 @@ class CouponRedeemView(View, VoucherMixin, EdxOrderPlacementMixin):
             if voucher is None:
                 return HttpResponseBadRequest('Code does not exist')
 
-        if voucher.is_active() is False:
+        if not voucher.is_active():
             return HttpResponseBadRequest('Code no longer valid')
 
         purchase_info = request.strategy.fetch_for_product(product)
         if not purchase_info.availability.is_available_to_buy:
-            return HttpResponseBadRequest('Product [{}] does not exist.'.format(product))
+            return HttpResponseBadRequest('Product [{}] not available for purchase.'.format(product))
 
         basket = self._prepare_basket(request.site, request.user, product, voucher)
 
@@ -153,7 +149,7 @@ class CouponRedeemView(View, VoucherMixin, EdxOrderPlacementMixin):
         else:
             return HttpResponseBadRequest('Basket total not $0, current value = ${}'.format(basket.total_excl_tax))
 
-        if order.status is 'Complete':
+        if order.status is ORDER.COMPLETE:
             return HttpResponseRedirect(get_lms_url(''))
         else:
             logger.error('Order was not completed [%s]', order.id)

@@ -22,7 +22,7 @@
             </div>
             <hr>
             <div class="pull-right">
-                <a href="/coupons/redeem/?code={{ code }}" class="btn btn-primary"> Redeem</a>
+                <a href="{% url 'coupons:redeem' %}?code={{ code }}" class="btn btn-primary">{% trans "Redeem" %}</a>
             </div>
         </div>
     </div>
