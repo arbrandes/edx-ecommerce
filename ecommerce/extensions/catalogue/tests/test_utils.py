@@ -102,7 +102,7 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
         title = 'Test coupon'
         _hash = ' '.join((
             unicode(title),
-            unicode(self.catalog.name),
+            unicode(self.catalog.id),
             str(self.partner.id)
         ))
         _hash = md5(_hash.lower()).hexdigest()[-10:]

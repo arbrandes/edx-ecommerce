@@ -276,7 +276,7 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
         self.assertEqual(Order.objects.first().lines.count(), 1)
         self.assertEqual(Order.objects.first().lines.first().product.title, 'Test coupon')
 
-    def test_authorization_required(self):
+    def test_authentication_required(self):
         """Test that a guest cannot access the view."""
         response = self.client.get(COUPONS_LINK)
         self.assertEqual(response.status_code, 200)
@@ -286,7 +286,7 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
         response = self.client.get(COUPONS_LINK)
         self.assertEqual(response.status_code, 401)
 
-    def test_authentication_required(self):
+    def test_authorization_required(self):
         """Test that a non-staff user cannot access the view."""
         user = self.create_user(is_staff=False)
         self.client.login(username=user.username, password=self.password)
