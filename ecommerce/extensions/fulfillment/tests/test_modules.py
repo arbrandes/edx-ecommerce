@@ -15,8 +15,9 @@ from testfixtures import LogCapture
 
 from ecommerce.courses.models import Course
 from ecommerce.courses.utils import mode_for_seat
+from ecommerce.extensions.api.v2.views.coupons import CouponOrderCreateView
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
-from ecommerce.extensions.fulfillment.modules import EnrollmentFulfillmentModule
+from ecommerce.extensions.fulfillment.modules import CouponFulfillmentModule, EnrollmentFulfillmentModule
 from ecommerce.extensions.fulfillment.status import LINE
 from ecommerce.extensions.fulfillment.tests.mixins import FulfillmentTestMixin
 from ecommerce.extensions.voucher.utils import create_vouchers
@@ -391,3 +392,50 @@ class EnrollmentFulfillmentModuleTests(CourseCatalogTestMixin, FulfillmentTestMi
         seat_basket = self.order.basket
         Applicator().apply_offers(seat_basket, voucher.offers.all())
         self.assertEqual(seat_basket.total_excl_tax, 0.00)
+
+
+class CouponFulfillmentModuleTest(FulfillmentTestMixin, TestCase):
+    """ Test coupon fulfillment. """
+
+    def setUp(self):
+        super(CouponFulfillmentModuleTest, self).setUp()
+        catalog = Catalog.objects.create(partner=self.partner)
+        data = {
+            'partner': self.partner,
+            'benefit_type': Benefit.PERCENTAGE,
+            'benefit_value': 100,
+            'catalog': catalog,
+            'end_date': datetime.date(2020, 1, 1),
+            'code': '',
+            'quantity': 5,
+            'start_date': datetime.date(2015, 1, 1),
+            'voucher_type': Voucher.SINGLE_USE
+        }
+        coupon = CouponOrderCreateView().create_coupon_product(
+            title='Test coupon',
+            price=100,
+            data=data
+        )
+
+        user = UserFactory()
+        basket = BasketFactory()
+        basket.add_product(coupon, 1)
+        self.order = factories.create_order(number=1, basket=basket, user=user)
+
+    def test_supports_line(self):
+        """Test that a line containing Coupon returns True."""
+        line = self.order.lines.first()
+        supports_line = CouponFulfillmentModule().supports_line(line)
+        self.assertTrue(supports_line)
+
+    def test_get_supported_lines(self):
+        """Test that Coupon lines where returned."""
+        lines = self.order.lines.all()
+        supported_lines = CouponFulfillmentModule().get_supported_lines(lines)
+        self.assertEqual(len(supported_lines), 1)
+
+    def test_fulfill_product(self):
+        """Test fulfilling a Coupon product."""
+        lines = self.order.lines.all()
+        __, completed_lines = CouponFulfillmentModule().fulfill_product(self.order, lines)
+        self.assertEqual(completed_lines[0].status, LINE.COMPLETE)

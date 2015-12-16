@@ -6,7 +6,6 @@ import dateutil.parser
 
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.utils.decorators import method_decorator
 from oscar.core.loading import get_model
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -40,14 +39,6 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, NonDestroyableModelViewSet):
     queryset = Product.objects.filter(product_class__name='Coupon')
     serializer_class = serializers.CouponSerializer
     permission_classes = (IsAuthenticated, IsAdminUser)
-
-    # Disable atomicity for the view. Otherwise, we'd be unable to commit to the database
-    # until the request had concluded; Django will refuse to commit when an atomic() block
-    # is active, since that would break atomicity. Without an order present in the database
-    # at the time fulfillment is attempted, asynchronous order fulfillment tasks will fail.
-    @method_decorator(transaction.non_atomic_requests)
-    def dispatch(self, request, *args, **kwargs):
-        return super(CouponOrderCreateView, self).dispatch(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         """Adds coupon to the user's basket.
