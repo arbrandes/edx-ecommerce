@@ -439,3 +439,8 @@ class CouponFulfillmentModuleTest(FulfillmentTestMixin, TestCase):
         lines = self.order.lines.all()
         __, completed_lines = CouponFulfillmentModule().fulfill_product(self.order, lines)
         self.assertEqual(completed_lines[0].status, LINE.COMPLETE)
+
+    def test_revoke_line(self):
+        line = self.order.lines.first()
+        with self.assertRaises(NotImplementedError):
+            CouponFulfillmentModule().revoke_line(line)

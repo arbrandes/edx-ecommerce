@@ -8,11 +8,15 @@ import pytz
 
 from ecommerce.courses.models import Course
 from ecommerce.extensions.api.v2.tests.views import JSON_CONTENT_TYPE, ProductSerializerMixin
+from ecommerce.extensions.api.v2.views.coupons import CouponOrderCreateView
 from ecommerce.extensions.catalogue.tests.mixins import CourseCatalogTestMixin
 from ecommerce.tests.testcases import TestCase
 
+Benefit = get_model('offer', 'Benefit')
+Catalog = get_model('catalogue', 'Catalog')
 Product = get_model('catalogue', 'Product')
 ProductClass = get_model('catalogue', 'ProductClass')
+Voucher = get_model('voucher', 'Voucher')
 
 
 class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCase):
@@ -27,6 +31,28 @@ class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCa
         # TODO Update the expiration date by 2099-12-31
         expires = datetime.datetime(2100, 1, 1, tzinfo=pytz.UTC)
         self.seat = self.course.create_or_update_seat('honor', False, 0, self.partner, expires=expires)
+
+    def create_coupon(self):
+        """Helper method for creating a coupon."""
+        catalog = Catalog.objects.create(partner=self.partner)
+        data = {
+            'partner': self.partner,
+            'benefit_type': Benefit.PERCENTAGE,
+            'benefit_value': 100,
+            'catalog': catalog,
+            'end_date': datetime.date(2020, 1, 1),
+            'code': '',
+            'quantity': 5,
+            'start_date': datetime.date(2015, 1, 1),
+            'voucher_type': Voucher.SINGLE_USE
+        }
+
+        coupon = CouponOrderCreateView().create_coupon_product(
+            title='Test coupon',
+            price=100,
+            data=data
+        )
+        return coupon
 
     def test_list(self):
         """ Verify a list of products is returned. """
@@ -120,3 +146,31 @@ class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCa
             'results': []
         }
         self.assertDictEqual(json.loads(response.content), expected)
+
+    def test_coupon_product_details(self):
+        """Verify the endpoint returns all coupon information."""
+        coupon = self.create_coupon()
+        url = reverse('api:v2:product-detail', kwargs={'pk': coupon.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['id'], 3)
+        self.assertEqual(response_data['title'], 'Test coupon')
+        self.assertEqual(response_data['price'], '100.00')
+        self.assertEqual(response_data['attribute_values'][0]['name'], 'Coupon vouchers')
+        self.assertEqual(len(response_data['attribute_values'][0]['value']), 5)
+
+    def test_coupon_voucher_serializer(self):
+        """Verify that the vouchers of a coupon are properly serialized."""
+        coupon = self.create_coupon()
+        url = reverse('api:v2:product-detail', kwargs={'pk': coupon.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        response_data = json.loads(response.content)
+        voucher = response_data['attribute_values'][0]['value'][0]
+        self.assertEqual(voucher['name'], 'Test coupon')
+        self.assertEqual(voucher['usage'], Voucher.SINGLE_USE)
+        self.assertEqual(voucher['benefit'][0], Benefit.PERCENTAGE)
+        self.assertEqual(voucher['benefit'][1], 100.0)

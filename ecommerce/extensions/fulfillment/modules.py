@@ -328,5 +328,13 @@ class CouponFulfillmentModule(BaseFulfillmentModule):
         logger.info("Finished fulfilling 'Coupon' product types for order [%s]", order.number)
         return order, lines
 
-    def revoke_line(self, line):  # pragma: no cover
+    def revoke_line(self, line):
+        """ Revokes the specified line.
+
+        Args:
+            line (Line): Order Line to be revoked.
+
+        Returns:
+            True, if the product is revoked; otherwise, False.
+        """
         raise NotImplementedError("Revoke method not implemented!")
