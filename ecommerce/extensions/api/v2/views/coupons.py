@@ -102,7 +102,7 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, generics.CreateAPIView):
                 partner=partner
             )
 
-            response_data = self.create_order_for_invoice(basket)
+            response_data = self.create_order_for_invoice(basket, coupon_id=coupon_product.id)
 
             return Response(response_data, status=status.HTTP_200_OK)
 
@@ -191,11 +191,12 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, generics.CreateAPIView):
         )
         return basket
 
-    def create_order_for_invoice(self, basket):
+    def create_order_for_invoice(self, basket, coupon_id):
         """Creates an order from the basket and invokes the invoice payment processor."""
         order_metadata = data_api.get_order_metadata(basket)
 
         response_data = {
+            AC.KEYS.COUPON_ID: coupon_id,
             AC.KEYS.BASKET_ID: basket.id,
             AC.KEYS.ORDER: None,
             AC.KEYS.PAYMENT_DATA: None,

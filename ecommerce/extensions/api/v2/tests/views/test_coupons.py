@@ -24,7 +24,7 @@ ProductClass = get_model('catalogue', 'ProductClass')
 StockRecord = get_model('partner', 'StockRecord')
 Voucher = get_model('voucher', 'Voucher')
 
-COUPONS_LINK = reverse('api:v2:coupons-list')
+COUPONS_LINK = reverse('api:v2:coupons:create')
 
 
 class CouponOrderCreateViewTest(TestCase):
@@ -65,18 +65,6 @@ class CouponOrderCreateViewTest(TestCase):
         )
         return coupon
 
-    def test_list_coupons(self):
-        """Test coupon API endpoint list."""
-        self.create_coupon(title='Test coupon', price=100)
-
-        response = self.client.get(COUPONS_LINK)
-        self.assertEqual(response.status_code, 200)
-        result = json.loads(response.content)['results']
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]['price'], '100.00')
-        self.assertEqual(result[0]['vouchers'][0]['name'], 'Test coupon')
-        self.assertEqual(len(result[0]['vouchers']), 5)
-
     def test_create(self):
         """Test the create method."""
         site_configuration = SiteConfigurationFactory(partner__name='TestX')
@@ -104,7 +92,7 @@ class CouponOrderCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
             response.data,
-            {u'payment_data': {u'payment_processor_name': u'Invoice'}, u'id': 1, u'order': 1}
+            {'payment_data': {'payment_processor_name': 'Invoice'}, 'id': 1, 'order': 1, 'coupon_id': 3}
         )
 
     def test_create_coupon_product(self):
@@ -219,7 +207,7 @@ class CouponOrderCreateViewTest(TestCase):
             site=self.site,
             partner=self.partner
         )
-        response_data = CouponOrderCreateView().create_order_for_invoice(basket)
+        response_data = CouponOrderCreateView().create_order_for_invoice(basket, coupon_id=coupon.id)
         self.assertEqual(response_data[AC.KEYS.BASKET_ID], 1)
         self.assertEqual(response_data[AC.KEYS.ORDER], 1)
         self.assertEqual(response_data[AC.KEYS.PAYMENT_DATA][AC.KEYS.PAYMENT_PROCESSOR_NAME], 'Invoice')
@@ -246,7 +234,7 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
         course = Course.objects.create(id=course_id)
         course.create_or_update_seat('verified', True, 100, self.partner)
 
-        data = {
+        self.data = {
             'title': 'Test coupon',
             'client_username': 'TestX',
             'stock_record_ids': [1, 2],
@@ -259,12 +247,13 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
             'quantity': 2,
             'price': 100
         }
-        self.response = self.client.post(COUPONS_LINK, data, format='json')
+        self.response = self.client.post(COUPONS_LINK, data=self.data, format='json')
 
     def test_response(self):
         """Test the response data given after the order was created."""
         self.assertEqual(self.response.status_code, 200)
         response_data = json.loads(self.response.content)
+        self.assertEqual(response_data[AC.KEYS.COUPON_ID], 5)
         self.assertEqual(response_data[AC.KEYS.BASKET_ID], 1)
         self.assertEqual(response_data[AC.KEYS.ORDER], 1)
         self.assertEqual(response_data[AC.KEYS.PAYMENT_DATA][AC.KEYS.PAYMENT_PROCESSOR_NAME], 'Invoice')
@@ -278,12 +267,12 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
 
     def test_authentication_required(self):
         """Test that a guest cannot access the view."""
-        response = self.client.get(COUPONS_LINK)
+        response = self.client.post(COUPONS_LINK, data=self.data)
         self.assertEqual(response.status_code, 200)
 
         self.client.logout()
 
-        response = self.client.get(COUPONS_LINK)
+        response = self.client.post(COUPONS_LINK, data=self.data)
         self.assertEqual(response.status_code, 401)
 
     def test_authorization_required(self):
@@ -291,5 +280,5 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
         user = self.create_user(is_staff=False)
         self.client.login(username=user.username, password=self.password)
 
-        response = self.client.get(COUPONS_LINK)
+        response = self.client.post(COUPONS_LINK, data=self.data)
         self.assertEqual(response.status_code, 403)
