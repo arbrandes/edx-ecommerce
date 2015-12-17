@@ -21,7 +21,7 @@ define([
         _.extend(Backbone.Model.prototype, Backbone.Validation.mixin);
 
         return Backbone.Model.extend({
-            urlRoot: '/api/v2/coupons/',
+            urlRoot: '/api/v2/products/',
 
             defaults: {
                 quantity: 1,
