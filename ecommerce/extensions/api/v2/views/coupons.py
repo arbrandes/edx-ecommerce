@@ -102,6 +102,7 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, generics.CreateAPIView):
                 partner=partner
             )
 
+            # Create an order now since payment is handled out of band via an invoice.
             response_data = self.create_order_for_invoice(basket, coupon_id=coupon_product.id)
 
             return Response(response_data, status=status.HTTP_200_OK)
@@ -141,6 +142,8 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, generics.CreateAPIView):
             slug=coupon_slug
         )
 
+        # Vouchers are created during order and not fulfillment like usual
+        # because we want vouchers to be part of the line in the order.
         try:
             create_vouchers(
                 name=title,
