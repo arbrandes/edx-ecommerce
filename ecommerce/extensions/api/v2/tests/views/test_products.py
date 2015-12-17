@@ -174,3 +174,19 @@ class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCa
         self.assertEqual(voucher['usage'], Voucher.SINGLE_USE)
         self.assertEqual(voucher['benefit'][0], Benefit.PERCENTAGE)
         self.assertEqual(voucher['benefit'][1], 100.0)
+
+    def test_product_filtering(self):
+        """Verify products are filtered."""
+        coupon = self.create_coupon()
+        url = reverse('api:v2:product-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['count'], 3)
+
+        filtered_url = '{}?product_class__name=Coupon'.format(url)
+        response = self.client.get(filtered_url)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(response_data['count'], 1)
+        self.assertEqual(response_data['results'][0]['product_class'], 'Coupon')
