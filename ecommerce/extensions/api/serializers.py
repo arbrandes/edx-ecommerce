@@ -51,8 +51,9 @@ class ProductAttributeValueSerializer(serializers.ModelSerializer):
 
     def get_value(self, obj):
         if obj.attribute.name == 'Coupon vouchers':
+            request = self.context.get('request')
             vouchers = obj.value.vouchers.all()
-            serializer = VoucherSerializer(vouchers, many=True)
+            serializer = VoucherSerializer(vouchers, many=True, context={'request': request})
             return serializer.data
         return obj.value
 
@@ -82,11 +83,22 @@ class PartialStockRecordSerializerForUpdate(StockRecordSerializer):
 
 class ProductSerializer(serializers.HyperlinkedModelSerializer):
     """ Serializer for Products. """
-    attribute_values = ProductAttributeValueSerializer(many=True, read_only=True)
+    attribute_values = serializers.SerializerMethodField()
     product_class = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
     is_available_to_buy = serializers.SerializerMethodField()
     stockrecords = StockRecordSerializer(many=True, read_only=True)
+
+    def get_attribute_values(self, product):
+        request = self.context.get('request')
+        attributes = product.attr
+        serializer = ProductAttributeValueSerializer(
+            attributes,
+            many=True,
+            read_only=True,
+            context={'request': request}
+        )
+        return serializer.data
 
     def get_product_class(self, product):
         return product.get_product_class().name
@@ -344,7 +356,8 @@ class VoucherSerializer(serializers.ModelSerializer):
     benefit = serializers.SerializerMethodField()
 
     def get_is_available_to_user(self, obj):
-        return obj.is_available_to_user()
+        request = self.context.get('request')
+        return obj.is_available_to_user(user=request.user)
 
     def get_benefit(self, obj):
         return (obj.offers.first().benefit.type, obj.offers.first().benefit.value)
