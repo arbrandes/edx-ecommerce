@@ -221,7 +221,14 @@ define([
 
                 this._super();
                 return this;
-            }
+            },
+
+            /**
+             * Override default saveSuccess.
+             */
+            saveSuccess: function (model, response) {
+                this.goTo(response.coupon_id.toString());
+            },
 
         });
     }
