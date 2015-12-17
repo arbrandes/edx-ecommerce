@@ -14,7 +14,7 @@ define([
 
         return PaginatedCollection.extend({
             model: CouponModel,
-            url: '/api/v2/coupons/'
+            url: '/api/v2/products/?product_class__name=Coupon'
         });
     }
 );

@@ -21,7 +21,7 @@ define([
         _.extend(Backbone.Model.prototype, Backbone.Validation.mixin);
 
         return Backbone.Model.extend({
-            urlRoot: '/api/v2/products/',
+            urlRoot: '/api/v2/coupons/',
 
             defaults: {
                 quantity: 1,
@@ -38,6 +38,7 @@ define([
                 client_username: {
                     required: true
                 },
+                // seat_type is for validation only, stock_record_ids holds the values
                 seat_type: {
                     required: true
                 },
