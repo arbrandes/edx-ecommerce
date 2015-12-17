@@ -81,8 +81,9 @@ class CouponOfferView(VoucherMixin, TemplateView):
         else:
             return HttpResponseBadRequest('Code not valid')
 
-        if not voucher.is_available_to_user(request.user):
-            return HttpResponseBadRequest('Code already used')
+        avail, msg = voucher.is_available_to_user(request.user)
+        if not avail:
+            return HttpResponseBadRequest(msg)
 
         api = EdxRestApiClient(get_lms_url('api/courses/v1/'))
         try:
