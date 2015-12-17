@@ -69,6 +69,9 @@ define([
                         collection: function () {
                             return this.seatTypes;
                         }
+                    },
+                    onSet: function(value) {
+                        return [value, value];
                     }
                 },
                 'select[name=code_type]': {
