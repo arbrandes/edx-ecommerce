@@ -205,13 +205,6 @@ define([
                 course.fetch({data: {include_products: true}});
             }, 100),
 
-            /**
-             * Navigate to coupon list on save (overrides default behaviour).
-             */
-            saveSuccess: function () {
-                this.goTo('/');
-            },
-
             render: function () {
                 // Render the parent form/template
                 this.$el.html(this.template(this.model.attributes));
