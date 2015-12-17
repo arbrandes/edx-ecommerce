@@ -41,6 +41,16 @@ define([
                 expect(Backbone.history.navigate).toHaveBeenCalled();
             });
 
+            it('should call saveSuccess when model is successfully saved', function () {
+                spyOn(view, 'saveSuccess');
+                spyOn(model, 'isValid').and.returnValue(true);
+                spyOn(model, 'save').and.callFake(function (options) {
+                    options.success({ id: 'fake_id' });
+                });
+                view.submit($.Event('click'));
+                expect(view.saveSuccess).toHaveBeenCalled();
+            });
+
             it('should throw an error if saving the data fails', function () {
                 var errorHTML = '<strong>Error!</strong> An error occurred while saving the data.',
                     errorObj;
