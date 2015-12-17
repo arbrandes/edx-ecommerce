@@ -185,15 +185,14 @@ define([
              */
             fillFromCourse: _.debounce(function () {
                 var courseId = this.$el.find('[name=course_id]').val(),
-                    course = Course.findOrCreate({id: courseId }),
+                    course = Course.findOrCreate({id: courseId}),
                     parseId = _.compose(parseInt, _.property('id')),
                     self = this;
 
-                course.listenTo(course, 'change', function (model) {
-                    self.seatTypes = _.map(model.seats(), function(seat) {
+                course.listenTo(course, 'change', function () {
+                    self.seatTypes = _.map(course.seats(), function(seat) {
                         return {
                             label: seat.getSeatTypeDisplayName(),
-                            // value: seat.get('certificate_type')
                             value: _.map(seat.get('stockrecords'), parseId)
                         };
                     });
