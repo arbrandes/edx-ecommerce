@@ -51,7 +51,8 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
             'code': '',
             'quantity': 5,
             'start_date': datetime.date(2015, 1, 1),
-            'voucher_type': Voucher.SINGLE_USE
+            'voucher_type': Voucher.SINGLE_USE,
+            'category': 'Test category'
         }
         coupon = CouponOrderCreateView().create_coupon_product(
             title='Test coupon',
@@ -64,38 +65,38 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
             unicode(self.catalog.id),
             str(self.partner.id)
         ))
-        _hash = md5(_hash.lower()).hexdigest()[-7:]
-        expected = _hash.upper()
+        digest = md5(_hash.lower()).hexdigest()[-7:]
+        expected = digest.upper()
         actual = generate_sku(coupon, self.partner, catalog=self.catalog)
         self.assertEqual(actual, expected)
 
-    def test_get_or_create_catalog(self):
-        """Verify that the proper catalog is fetched."""
-        self.catalog.stock_records.add(StockRecord.objects.first())
+        def test_get_or_create_catalog(self):
+            """Verify that the proper catalog is fetched."""
+            self.catalog.stock_records.add(StockRecord.objects.first())
 
-        self.assertEqual(self.catalog.id, 1)
+            self.assertEqual(self.catalog.id, 1)
 
-        existing_catalog, created = get_or_create_catalog(
-            name='Test',
-            partner=self.partner,
-            stock_record_ids=[1]
-        )
-        self.assertFalse(created)
-        self.assertEqual(self.catalog, existing_catalog)
-        self.assertEqual(Catalog.objects.count(), 1)
+            existing_catalog, created = get_or_create_catalog(
+                name='Test',
+                partner=self.partner,
+                stock_record_ids=[1]
+            )
+            self.assertFalse(created)
+            self.assertEqual(self.catalog, existing_catalog)
+            self.assertEqual(Catalog.objects.count(), 1)
 
-        course_id = 'sku/test2/course'
-        course = Course.objects.create(id=course_id, name='Test Course 2')
-        course.create_or_update_seat('verified', False, 0, self.partner)
+            course_id = 'sku/test2/course'
+            course = Course.objects.create(id=course_id, name='Test Course 2')
+            course.create_or_update_seat('verified', False, 0, self.partner)
 
-        new_catalog, created = get_or_create_catalog(
-            name='Test',
-            partner=self.partner,
-            stock_record_ids=[1, 2]
-        )
-        self.assertTrue(created)
-        self.assertNotEqual(self.catalog, new_catalog)
-        self.assertEqual(Catalog.objects.count(), 2)
+            new_catalog, created = get_or_create_catalog(
+                name='Test',
+                partner=self.partner,
+                stock_record_ids=[1, 2]
+            )
+            self.assertTrue(created)
+            self.assertNotEqual(self.catalog, new_catalog)
+            self.assertEqual(Catalog.objects.count(), 2)
 
     def test_generate_coupon_slug(self):
         """Verify the method generates proper slug."""
