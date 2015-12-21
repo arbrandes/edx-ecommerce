@@ -59,7 +59,8 @@ class CouponOrderCreateViewTest(TestCase):
             'benefit_value': 100,
             'voucher_type': Voucher.SINGLE_USE,
             'quantity': 1,
-            'price': 100
+            'price': 100,
+            'category': 'Test category'
         }
         request = RequestFactory()
         request.data = data
@@ -86,6 +87,7 @@ class CouponOrderCreateViewTest(TestCase):
         self.assertEqual(stock_record.price_excl_tax, 100)
 
         self.assertEqual(coupon.attr.coupon_vouchers.vouchers.count(), 5)
+        self.assertEqual(coupon.attr.coupon_category, 'Test category')
 
     def test_append_to_existing_coupon(self):
         """Test adding additional vouchers to an existing coupon."""
@@ -99,7 +101,8 @@ class CouponOrderCreateViewTest(TestCase):
             'code': '',
             'quantity': 2,
             'start_date': datetime.date(2015, 1, 1),
-            'voucher_type': Voucher.MULTI_USE
+            'voucher_type': Voucher.MULTI_USE,
+            'coupon_category': 'Test category'
         }
         coupon_append = CouponOrderCreateView().create_coupon_product(
             title='Test coupon',
@@ -123,7 +126,8 @@ class CouponOrderCreateViewTest(TestCase):
             'code': 'CUSTOMCODE',
             'quantity': 1,
             'start_date': datetime.date(2015, 1, 1),
-            'voucher_type': Voucher.ONCE_PER_CUSTOMER
+            'voucher_type': Voucher.ONCE_PER_CUSTOMER,
+            'coupon_category': 'Test category'
         }
         custom_coupon = CouponOrderCreateView().create_coupon_product(
             title='Custom coupon',
@@ -144,7 +148,8 @@ class CouponOrderCreateViewTest(TestCase):
             'code': 'CUSTOMCODE',
             'quantity': 1,
             'start_date': datetime.date(2015, 1, 1),
-            'voucher_type': Voucher.SINGLE_USE
+            'voucher_type': Voucher.SINGLE_USE,
+            'coupon_category': 'Test category'
         }
         CouponOrderCreateView().create_coupon_product(
             title='Custom coupon',
@@ -223,7 +228,8 @@ class CouponOrderCreateViewFunctionalTest(TestCase):
             'benefit_value': 100,
             'voucher_type': Voucher.SINGLE_USE,
             'quantity': 2,
-            'price': 100
+            'price': 100,
+            'category': 'Test category'
         }
         self.response = self.client.post(COUPONS_LINK, data=self.data, format='json')
 

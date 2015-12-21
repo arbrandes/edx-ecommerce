@@ -22,6 +22,8 @@ class CouponProductTest(TestCase):
         voucherList = CouponVouchers.objects.create(coupon=coupon_product)
         voucherList.vouchers.add(voucher)
         coupon_product.attr.coupon_voucher = voucherList
+        coupon_product.attr.coupon_category = 'coupon-category'
+        coupon_product.save()
 
         # clean() is an Oscar validation method for products
         self.assertIsNone(coupon_product.clean())
@@ -29,3 +31,4 @@ class CouponProductTest(TestCase):
         self.assertEqual(coupon_product.title, 'Test product')
         self.assertEqual(coupon_product.attr.coupon_voucher.vouchers.count(), 1)
         self.assertEqual(coupon_product.attr.coupon_voucher.vouchers.first().code, 'MYVOUCHER')
+        self.assertEqual(coupon_product.attr.coupon_category, 'coupon-category')

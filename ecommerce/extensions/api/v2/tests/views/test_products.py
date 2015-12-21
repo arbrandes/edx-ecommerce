@@ -136,8 +136,10 @@ class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCa
         self.assertEqual(response_data['id'], 3)
         self.assertEqual(response_data['title'], 'Test coupon')
         self.assertEqual(response_data['price'], '100.00')
-        self.assertEqual(response_data['attribute_values'][0]['name'], 'Coupon vouchers')
-        self.assertEqual(len(response_data['attribute_values'][0]['value']), 5)
+        self.assertEqual(response_data['attribute_values'][0]['name'], 'Coupon category')
+        self.assertEqual(response_data['attribute_values'][0]['value'], 'Test category')
+        self.assertEqual(response_data['attribute_values'][1]['name'], 'Coupon vouchers')
+        self.assertEqual(len(response_data['attribute_values'][1]['value']), 5)
 
     def test_coupon_voucher_serializer(self):
         """Verify that the vouchers of a coupon are properly serialized."""
@@ -147,7 +149,7 @@ class ProductViewSetTests(ProductSerializerMixin, CourseCatalogTestMixin, TestCa
         self.assertEqual(response.status_code, 200)
 
         response_data = json.loads(response.content)
-        voucher = response_data['attribute_values'][0]['value'][0]
+        voucher = response_data['attribute_values'][1]['value'][0]
         self.assertEqual(voucher['name'], 'Test coupon')
         self.assertEqual(voucher['usage'], Voucher.SINGLE_USE)
         self.assertEqual(voucher['benefit'][0], Benefit.PERCENTAGE)

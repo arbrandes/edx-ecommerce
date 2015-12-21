@@ -51,7 +51,8 @@ class UtilsTests(CourseCatalogTestMixin, TestCase):
             'code': '',
             'quantity': 5,
             'start_date': datetime.date(2015, 1, 1),
-            'voucher_type': Voucher.SINGLE_USE
+            'voucher_type': Voucher.SINGLE_USE,
+            'coupon_category': 'Test category'
         }
         coupon = CouponOrderCreateView().create_coupon_product(
             title='Test coupon',
