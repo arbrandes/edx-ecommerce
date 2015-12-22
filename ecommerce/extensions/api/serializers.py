@@ -393,7 +393,10 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
         return "Discount code"
 
     def get_last_edited(self, obj):
-        return (obj.history.latest().history_user.username, obj.history.latest().history_date)
+        history = obj.history.latest()
+        if history.history_user:
+            return (obj.history.latest().history_user.username, obj.history.latest().history_date)
+        return []
 
     def get_catalog(self, obj):
         voucher = obj.attr.coupon_vouchers.vouchers.first()

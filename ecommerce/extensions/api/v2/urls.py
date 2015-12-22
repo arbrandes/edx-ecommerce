@@ -65,7 +65,7 @@ router.register(r'catalogs', catalog_views.CatalogViewSet) \
     .register(r'products', product_views.ProductViewSet, base_name='catalog-product',
               parents_query_lookups=['stockrecords__catalogs'])
 
-router.register(r'coupons', coupon_views.CouponOrderCreateViewSet)
+router.register(r'coupons', coupon_views.CouponOrderCreateViewSet, base_name='coupons')
 router.register(r'orders', order_views.OrderViewSet)
 
 urlpatterns += router.urls

@@ -25,7 +25,7 @@ ProductClass = get_model('catalogue', 'ProductClass')
 StockRecord = get_model('partner', 'StockRecord')
 Voucher = get_model('voucher', 'Voucher')
 
-COUPONS_LINK = reverse('api:v2:coupons:create')
+COUPONS_LINK = reverse('api:v2:coupons-list')
 
 
 class CouponOrderCreateViewSetTest(TestCase):
@@ -259,3 +259,21 @@ class CouponOrderCreateViewSetFunctionalTest(TestCase):
 
         response = self.client.post(COUPONS_LINK, data=self.data)
         self.assertEqual(response.status_code, 403)
+
+    def test_list_coupons(self):
+        """Test that the endpoint returns information needed for the details page."""
+        response = self.client.get(COUPONS_LINK)
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        coupon_data = response_data['results'][0]
+        self.assertEqual(coupon_data['title'], 'Test coupon')
+        self.assertEqual(coupon_data['coupon_type'], 'Enrollment code')
+        self.assertIsNotNone(coupon_data['last_edited'][0])
+        self.assertEqual(coupon_data['catalog']['name'], 'Catalog for stock records: 2')
+        self.assertEqual(coupon_data['vouchers'][0]['benefit'][1], 100.0)
+        self.assertEqual(coupon_data['vouchers'][0]['start_datetime'], '2015-01-01T05:00:00Z')
+        self.assertEqual(coupon_data['vouchers'][0]['end_datetime'], '2020-01-01T05:00:00Z')
+        self.assertIsNotNone(coupon_data['vouchers'][0]['code'])
+        self.assertTrue(coupon_data['vouchers'][0]['is_available_to_user'][0])
+        self.assertEqual(coupon_data['client'], 'TestX')
+        self.assertEqual(coupon_data['price'], '100.00')
