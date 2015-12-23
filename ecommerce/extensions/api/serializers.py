@@ -384,6 +384,7 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
     catalog = serializers.SerializerMethodField()
     client = serializers.SerializerMethodField()
     vouchers = serializers.SerializerMethodField()
+    # coupon_category = serializers.SerializerMethodField()
 
     def get_coupon_type(self, obj):
         voucher = obj.attr.coupon_vouchers.vouchers.first()
@@ -395,7 +396,7 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
     def get_last_edited(self, obj):
         history = obj.history.latest()
         if history.history_user:
-            return (obj.history.latest().history_user.username, obj.history.latest().history_date)
+            return (history.history_user.username, history.history_date)
         return []
 
     def get_catalog(self, obj):
@@ -412,6 +413,9 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
         serializer = VoucherSerializer(vouchers, many=True, context={'request': self.context['request']})
         return serializer.data
 
+    # def get_coupon_category(self, obj):
+    #     return obj.attr.coupon_category
+
     class Meta(object):
         model = Product
-        fields = ('id', 'title', 'coupon_type', 'last_edited', 'catalog', 'client', 'price', 'vouchers')
+        fields = ('id', 'title', 'coupon_type', 'last_edited', 'catalog', 'client', 'price', 'vouchers',)
