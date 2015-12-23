@@ -1,0 +1,51 @@
+{% extends 'edx/base.html' %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{% trans "Redeem" %}{% endblock %}
+
+{% block content %}
+    <div id="redemption">
+        <div class="depth depth--3">
+            <div class="copy copy-meta">
+                {% trans "You applied a discount! Your discount is reflected in the prices below." %}
+            </div>
+        </div>
+        <div class="container">
+            <h5>{% trans "Enroll and Pursue a Verified Certificate in" %}</h5>
+            <div class="row">
+                <div class="col-md-2">
+                    <img class="img-responsive" src="{{course.image_url}}" alt="" />
+                </div>
+                <div class="col-md-8">
+                    <h3>{{ course.name }} - {{ course.org }}</h3>
+                    <p>
+                        {{ course.short_description }}
+                    </p>
+                </div>
+                <div class="col-md-2 text-right course-price">
+                    <s class="course-price">${{ price }}</s>
+                    <strong>{% trans "FREE" %}</strong>
+                </div>
+            </div>
+            <hr>
+            <div class="text-right">
+                <p>
+                    <b class="total-price">{% trans "Total: $0" %}</b>
+                </p>
+                <a href="{% url 'coupons:redeem' %}?code={{ code }}" class="btn btn-primary">{% trans "Redeem" %}</a>
+            </div>
+            <div class="alert alert-info note">
+                <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
+                <b>{% trans "Note:" %}</b>
+                {% trans "You will need a webcam and a photo ID to verify your indentity before the course ends." %}
+            </div>
+            <div>
+                <b>{% trans "Have Questions?" %}</b>
+                <p>
+                    {% trans "Please read our FAQs to view common questions about our certificates." %}
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
