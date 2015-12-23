@@ -406,7 +406,7 @@ class CouponSerializer(ProductPaymentInfoMixin, serializers.ModelSerializer):
         return serializer.data
 
     def get_client(self, obj):
-        return Basket.objects.get(lines__product_id=obj.id).owner.username
+        return Basket.objects.filter(lines__product_id=obj.id).first().owner.username
 
     def get_vouchers(self, obj):
         vouchers = obj.attr.coupon_vouchers.vouchers.all()
