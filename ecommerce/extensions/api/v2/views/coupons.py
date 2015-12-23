@@ -73,6 +73,7 @@ class CouponOrderCreateViewSet(EdxOrderPlacementMixin, NonDestroyableModelViewSe
             quantity = request.data[AC.KEYS.QUANTITY]
             price = request.data[AC.KEYS.PRICE]
             partner = request.site.siteconfiguration.partner
+            coupon_category = request.data[AC.KEYS.CATEGORY]
 
             client, __ = Client.objects.get_or_create(username=client_username)
 
@@ -94,7 +95,8 @@ class CouponOrderCreateViewSet(EdxOrderPlacementMixin, NonDestroyableModelViewSe
                 'code': code,
                 'quantity': quantity,
                 'start_date': start_date,
-                'voucher_type': voucher_type
+                'voucher_type': voucher_type,
+                'coupon_category': coupon_category
             }
 
             coupon_product = self.create_coupon_product(title, price, data)
@@ -168,6 +170,7 @@ class CouponOrderCreateViewSet(EdxOrderPlacementMixin, NonDestroyableModelViewSe
         coupon_vouchers = CouponVouchers.objects.get(coupon=coupon_product)
 
         coupon_product.attr.coupon_vouchers = coupon_vouchers
+        coupon_product.attr.coupon_category = data['coupon_category']
         coupon_product.save()
 
         sku = generate_sku(
