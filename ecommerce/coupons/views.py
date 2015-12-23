@@ -97,9 +97,11 @@ class CouponOfferView(TemplateView):
             return Response({'message': e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         course['image_url'] = get_lms_url(course['media']['course_image']['uri'])
+        stock_records = voucher.offers.first().condition.range.catalog.stock_records.all()
         data = {
             'course': course,
             'code': code,
+            'price': stock_records[0].price_excl_tax
         }
         return render(request, self.template_name, data)
 
