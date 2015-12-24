@@ -94,7 +94,7 @@ class CouponOfferView(TemplateView):
         try:
             course = api.courses(product.course_id).get()
         except SlumberHttpBaseException as e:
-            logger.error('Could not get course information')
+            logger.exception('Could not get course information')
             return Response({'message': e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         course['image_url'] = get_lms_url(course['media']['course_image']['uri'])
