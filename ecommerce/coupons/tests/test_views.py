@@ -1,10 +1,12 @@
+import httpretty
 import json
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-import httpretty
-from testfixtures import LogCapture
+from oscar.core.loading import get_model
+from oscar.test.factories import ConditionalOfferFactory, VoucherFactory
 
+from ecommerce.coupons.views import get_voucher
 from ecommerce.tests.testcases import TestCase
 
 
@@ -29,3 +31,14 @@ class CouponAppViewTests(TestCase):
         self.client.login(username=user.username, password=self.password)
         response = self.client.get(self.path)
         self.assertEqual(response.status_code, 200)
+
+    def test_get_voucher(self):
+        """ Verify that get_voucher() returns product and voucher. """
+        test_voucher = VoucherFactory(code='COUPONTEST')
+        offer = ConditionalOfferFactory()
+        test_voucher.offers.add(offer)
+        test_voucher.save()
+
+        voucher, product = get_voucher(code='COUPONTEST')
+        self.assertIsNotNone(voucher)
+        self.assertIsNotNone(product)
