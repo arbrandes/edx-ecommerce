@@ -272,6 +272,7 @@ class CouponOrderCreateViewSetFunctionalTest(TestCase):
         self.assertEqual(coupon_data['seats'][0]['attribute_values'][0]['value'], 'verified')
         self.assertEqual(coupon_data['seats'][0]['attribute_values'][1]['value'], 'edx/Demo_Course2/DemoX')
         self.assertEqual(coupon_data['vouchers'][0]['benefit'][1], 100.0)
+        self.assertIsNotNone(coupon_data['vouchers'][0]['redeem_url'])
         self.assertEqual(coupon_data['vouchers'][0]['start_datetime'], '2015-01-01T05:00:00Z')
         self.assertEqual(coupon_data['vouchers'][0]['end_datetime'], '2020-01-01T05:00:00Z')
         self.assertIsNotNone(coupon_data['vouchers'][0]['code'])

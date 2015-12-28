@@ -3,6 +3,7 @@ from decimal import Decimal
 import logging
 
 from dateutil.parser import parse
+from django.conf import settings
 from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 from oscar.core.loading import get_model, get_class
@@ -360,6 +361,7 @@ class CatalogSerializer(serializers.ModelSerializer):
 class VoucherSerializer(serializers.ModelSerializer):
     is_available_to_user = serializers.SerializerMethodField()
     benefit = serializers.SerializerMethodField()
+    redeem_url = serializers.SerializerMethodField()
 
     def get_is_available_to_user(self, obj):
         request = self.context.get('request')
@@ -368,10 +370,14 @@ class VoucherSerializer(serializers.ModelSerializer):
     def get_benefit(self, obj):
         return (obj.offers.first().benefit.type, obj.offers.first().benefit.value)
 
+    def get_redeem_url(self, obj):
+        domain = settings.ECOMMERCE_URL_ROOT
+        return "{}/coupons/offer/?code={}".format(domain, obj.code)
+
     class Meta(object):
         model = Voucher
         fields = (
-            'id', 'name', 'code', 'usage', 'start_datetime', 'end_datetime',
+            'id', 'name', 'code', 'redeem_url', 'usage', 'start_datetime', 'end_datetime',
             'num_basket_additions', 'num_orders', 'total_discount',
             'date_created', 'offers', 'is_available_to_user', 'benefit'
         )
