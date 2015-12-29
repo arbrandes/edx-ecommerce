@@ -3,8 +3,7 @@ import json
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from oscar.core.loading import get_model
-from oscar.test.factories import ConditionalOfferFactory, VoucherFactory
+from oscar.test.factories import ConditionalOfferFactory, VoucherFactory, RangeFactory, BenefitFactory, ProductFactory
 
 from ecommerce.coupons.views import get_voucher
 from ecommerce.tests.testcases import TestCase
@@ -12,6 +11,21 @@ from ecommerce.tests.testcases import TestCase
 
 class CouponAppViewTests(TestCase):
     path = reverse('coupons:app', args=[''])
+
+    def setUp(self):
+        super(CouponAppViewTests, self).setUp()
+
+    def prepare_voucher(self):
+        test_product = ProductFactory(title='Test product')
+        test_product.attr.course = 'edX/DemoX/Demo_Course'
+        test_product.save()
+
+        test_voucher = VoucherFactory(code='COUPONTEST')
+        range = RangeFactory(products=[test_product, ])
+        benefit = BenefitFactory(range=range)
+        offer = ConditionalOfferFactory(benefit=benefit)
+        test_voucher.offers.add(offer)
+        return test_voucher
 
     def test_login_required(self):
         """ Users are required to login before accessing the view. """
@@ -34,11 +48,9 @@ class CouponAppViewTests(TestCase):
 
     def test_get_voucher(self):
         """ Verify that get_voucher() returns product and voucher. """
-        test_voucher = VoucherFactory(code='COUPONTEST')
-        offer = ConditionalOfferFactory()
-        test_voucher.offers.add(offer)
-        test_voucher.save()
-
+        self.prepare_voucher()
         voucher, product = get_voucher(code='COUPONTEST')
         self.assertIsNotNone(voucher)
+        self.assertEqual(voucher.code, 'COUPONTEST')
         self.assertIsNotNone(product)
+        self.assertEqual(product.title, 'Test product')
