@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
+from django.shortcuts import render
 from oscar.core.loading import get_class, get_model
 from rest_framework import status
 from rest_framework.response import Response
@@ -75,20 +76,21 @@ class CouponOfferView(TemplateView):
                 if avail:
                     api = EdxRestApiClient(
                         get_lms_url('api/courses/v1/'),
-                        oauth_access_token=self.request.user.access_token
                     )
                     try:
                         course = api.courses(product.course_id).get()
                     except SlumberHttpBaseException as e:
-                        logger.exception('Could not get course information.')
+                        logger.exception('Could not get course information. [{} - {}]'.format(e, e.content))
                         return {
                             'error': _('Could not get course information. [{}]'.format(e))
                         }
 
                     course['image_url'] = get_lms_url(course['media']['course_image']['uri'])
+                    stock_records = voucher.offers.first().benefit.range.catalog.stock_records.first()
                     context.update({
                         'course': course,
                         'code': code,
+                        'price': stock_records.price_excl_tax,
                     })
                     return context
         return {
@@ -100,7 +102,7 @@ class CouponOfferView(TemplateView):
         return super(CouponOfferView, self).get(request, *args, **kwargs)
 
 
-class CouponRedeemView(EdxOrderPlacementMixin, TemplateView):
+class CouponRedeemView(EdxOrderPlacementMixin, View):
 
     @method_decorator(login_required)
     def get(self, request):
@@ -108,31 +110,27 @@ class CouponRedeemView(EdxOrderPlacementMixin, TemplateView):
         Looks up the passed code and adds the matching product to a basket,
         then applies the voucher and if the basket total is FREE places the order and
         enrolls the user in the course.
-
-        Arguments:
-            code (str): The code of a coupon voucher.
-
-        Returns:
-            404 the voucher with the supplied code does not exist.
-            406 Code expired: voucher is no longer active.
-                Product not available for purchase.
-            500 order didn't complete.
         """
+        template_name = 'coupons/coupon_redemption.html'
         code = request.GET.get('code', None)
-        if code is not None:
-            voucher, product = get_voucher(code=code)
-            if voucher is None:
-                return Response({'error': _('Code does not exist.')}, status=status.HTTP_404_NOT_FOUND)
+
+        if not code:
+            return render(request, template_name, {'error': _('Code not provided')})
+
+        voucher, product = get_voucher(code=code)
+        if voucher is None:
+            return render(request, template_name, {'error': _('Code does not exist')})
 
         if not voucher.is_active():
-            return Response({'error': _('Code expired.')}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            return render(request, template_name, {'error': _('Code expired')})
+
+        avail, msg = voucher.is_available_to_user(self.request.user)
+        if not avail:
+            return render(request, template_name, {'error': _(msg)})
 
         purchase_info = request.strategy.fetch_for_product(product)
         if not purchase_info.availability.is_available_to_buy:
-            return Response(
-                {'error': _('Product [{}] not available for purchase.').format(product)},
-                status=status.HTTP_406_NOT_ACCEPTABLE
-            )
+            return render(request, template_name, {'error': _('Product [{}] not available for purchase.'.format(product))})
 
         basket = self._prepare_basket(request.site, request.user, product, voucher)
 
@@ -141,7 +139,7 @@ class CouponRedeemView(EdxOrderPlacementMixin, TemplateView):
             order_metadata = data_api.get_order_metadata(basket)
 
             logger.info(
-                'Preparing to place order [%s] for the contents of basket [%d].',
+                u"Preparing to place order [%s] for the contents of basket [%d]",
                 order_metadata[AC.KEYS.ORDER_NUMBER],
                 basket.id,
             )
@@ -159,19 +157,13 @@ class CouponRedeemView(EdxOrderPlacementMixin, TemplateView):
                 order_total=order_metadata[AC.KEYS.ORDER_TOTAL],
             )
         else:
-            return Response(
-                {'error': _('Basket total not $0, current value = ${}.').format(basket.total_excl_tax)},
-                status.HTTP_406_NOT_ACCEPTABLE
-            )
+            return render(request, template_name, {'error': _('Basket total not $0, current value = ${}'.format(basket.total_excl_tax))})
 
         if order.status is ORDER.COMPLETE:
             return HttpResponseRedirect(get_lms_url(''))
         else:
-            logger.error('Order was not completed [%s].', order.id)
-            return Response(
-                {'error': _('Error when trying to redeem code.')},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error('Order was not completed [%s]', order.id)
+            return render(request, template_name, {'error': _('Error when trying to redeem code')})
 
     def _prepare_basket(self, site, user, product, voucher):
         """

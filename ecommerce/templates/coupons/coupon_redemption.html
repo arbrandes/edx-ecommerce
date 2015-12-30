@@ -1,0 +1,7 @@
+<h1> COURSE: {{course}}</h1>
+<h1> ERROR: {{error}}</h1>
+<h1> CODE: {{code}}</h1>
+<h1> PRICE: {{price}}</h1>
+<h1> USER: {{user}}</h1>
+
+<a href="{% url 'coupons:redeem' %}?code={{ code }}" class="btn btn-primary">Redeem</a>
