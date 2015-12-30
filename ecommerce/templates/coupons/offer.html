@@ -5,7 +5,7 @@
 {% block title %}{% trans "Redeem" %}{% endblock %}
 
 {% block content %}
-    <div id="redemption">
+    <div id="offer">
         <div class="depth depth--3">
             <div class="copy copy-meta">
                 {% trans "Enrollment code applied to course price. To redeem the enrollment code, enroll in the course." %}
@@ -35,11 +35,15 @@
                 </p>
                 <a href="{% url 'coupons:redeem' %}?code={{ code }}" class="btn btn-primary">{% trans "Enroll and Redeem Code" %}</a>
             </div>
+            
+            {% if verified %}
             <div class="alert alert-info note">
                 <span class="fa fa-exclamation-circle" aria-hidden="true"></span>
                 <b>{% trans "Note:" %}</b>
                 {% trans "You must verify your identity using a webcam and a government-issued photo ID before the course ends." %}
             </div>
+            {% endif %}
+
             <div>
                 <b>{% trans "Questions?" %}</b>
                 <p>

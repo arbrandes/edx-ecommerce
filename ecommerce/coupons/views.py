@@ -60,7 +60,7 @@ class CouponAppView(StaffOnlyMixin, TemplateView):
 
 
 class CouponOfferView(TemplateView):
-    template_name = 'coupons/coupon_redemption.html'
+    template_name = 'coupons/offer.html'
 
     def get(self, request):
         """
@@ -98,10 +98,12 @@ class CouponOfferView(TemplateView):
 
         course['image_url'] = get_lms_url(course['media']['course_image']['uri'])
         stock_records = voucher.offers.first().condition.range.catalog.stock_records.all()
+
         data = {
             'course': course,
             'code': code,
-            'price': stock_records[0].price_excl_tax
+            'price': stock_records[0].price_excl_tax,
+            'verified': (product.attr.certificate_type == 'verified')
         }
         return render(request, self.template_name, data)
 
