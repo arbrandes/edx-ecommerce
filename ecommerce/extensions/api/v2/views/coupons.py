@@ -171,7 +171,7 @@ class CouponOrderCreateView(EdxOrderPlacementMixin, generics.CreateAPIView):
 
         coupon_product.attr.coupon_vouchers = coupon_vouchers
         category = create_from_breadcrumbs(data['category'])
-        ProductCategory.objects.get_or_create(category=Category.objects.first(), product=coupon_product)
+        ProductCategory.objects.get_or_create(category=category, product=coupon_product)
 
         coupon_product.save()
 
