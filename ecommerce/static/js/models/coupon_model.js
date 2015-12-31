@@ -21,7 +21,6 @@ define([
         _.extend(Backbone.Validation.messages, {
             required: gettext('This field is required'),
             number: gettext('This value must be a number'),
-            digits: gettext('This value must only contain digits'),
             date: gettext('This value must be a date')
         });
         _.extend(Backbone.Model.prototype, Backbone.Validation.mixin);
@@ -50,7 +49,7 @@ define([
                     }
                 },
                 seat_type: { required: true },
-                quantity: { pattern: 'digits' },
+                quantity: { pattern: 'number' },
                 benefit_value: {
                     pattern: 'number',
                     required: function () {

@@ -1,12 +1,14 @@
 define([
         'jquery',
-        'backbone'
+        'backbone',
+        'underscore'
     ],
-    function ($, Backbone) {
+    function ($, Backbone, _) {
         'use strict';
 
         return Backbone.View.extend({
             className: 'alert',
+            template: _.template('<strong><%= title %></strong> <%= message %>'),
 
             initialize: function (options) {
                 this.level = options.level || 'info';
@@ -15,11 +17,7 @@ define([
             },
 
             render: function () {
-                var body = '';
-                if (this.title) {
-                    body += '<strong>' + this.title + '</strong> ';
-                }
-                body += this.message;
+                var body = this.template({title: this.title, message: this.message});
                 this.$el.addClass('alert-' + this.level).attr('role', 'alert').html(body);
                 return this;
             }
