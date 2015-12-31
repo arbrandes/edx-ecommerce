@@ -69,12 +69,12 @@ define([
                                 data: 'title'
                             },
                             {
-                                title: gettext('Voucher Report'),
+                                title: gettext('Coupon Report'),
                                 data: 'id',
                                 fnCreatedCell: function (nTd, sData, oData) {
                                     $(nTd).html(_s.sprintf('<a href="" ' +
                                         'class="btn btn-secondary btn-small voucher-report-button" ' +
-                                        'data-coupon-id="%s"> Download Voucher Report</a>', oData.id));
+                                        'data-coupon-id="%s"> Download Coupon Report</a>', oData.id));
                                 },
                                 orderable: false
                              }
