@@ -27,7 +27,8 @@ define([
                 quantity: 1,
                 stock_record_ids: [],
                 code: '',
-                category: ''
+                category: '',
+                price: ''
             },
 
             validation: {
@@ -41,22 +42,12 @@ define([
                     required: true
                 },
                 // seat_type is for validation only, stock_record_ids holds the values
-                seat_type: {
-                    required: true
-                },
-                price: {
-                    pattern: 'number',
-                    required: function () {
-                        return this.isEnrollmentCode();
-                    }
-                },
-                quantity: {
-                    pattern: 'digits'
-                },
+                seat_type: { required: true },
+                quantity: { pattern: 'digits' },
                 benefit_value: {
                     pattern: 'number',
                     required: function () {
-                        return this.isDiscountCode();
+                        return this.get('code_type') === 'discount';
                     }
                 },
                 start_date: function (val) {
@@ -99,14 +90,6 @@ define([
                 price: gettext('Total Paid'),
                 quantity: gettext('Number of Codes'),
                 benefit_value: gettext('Discount Value')
-            },
-
-            isEnrollmentCode: function () {
-                return this.get('code_type') === 'enrollment' ;
-            },
-
-            isDiscountCode: function () {
-                return this.get('code_type') === 'discount' ;
             },
 
             initialize: function () {
