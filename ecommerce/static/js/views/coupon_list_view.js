@@ -18,6 +18,9 @@ define([
 
         return Backbone.View.extend({
             className: 'coupon-list-view',
+            downloadTpl: _.template('<a href="" class="btn btn-secondary btn-small ' +
+                'voucher-report-button" data-coupon-id="<%= id %>">' +
+                '<%= gettext(\'Download Coupon Report\') %></a>'),
 
             events: {
                 'click .voucher-report-button': 'downloadCouponReport'
@@ -72,12 +75,10 @@ define([
                                 }
                             },
                             {
-                                title: gettext('Voucher Report'),
+                                title: gettext('Coupon Report'),
                                 data: 'id',
                                 fnCreatedCell: function (nTd, sData, oData) {
-                                    $(nTd).html(_s.sprintf('<a href="" ' +
-                                        'class="btn btn-secondary btn-small voucher-report-button" ' +
-                                        'data-coupon-id="%s"> Download Coupon Report</a>', oData.id));
+                                    $(nTd).html(this.downloadTpl(oData.id));
                                 },
                                 orderable: false
                              }
