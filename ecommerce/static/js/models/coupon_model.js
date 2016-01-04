@@ -32,8 +32,8 @@ define([
                 quantity: 1,
                 stock_record_ids: [],
                 code: '',
-                category: '',
-                price: ''
+                price: '',
+                category: ''
             },
 
             validation: {
